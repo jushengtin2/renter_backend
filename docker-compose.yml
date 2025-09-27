@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:15
+    container_name: renter_db
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: renter_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: jushengtin2@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: 12345678
+    ports:
+      - "5051:80"
+    depends_on:
+      - db
+    volumes:
+      - ./pgadmin_data:/var/lib/pgadmin
