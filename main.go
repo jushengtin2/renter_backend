@@ -18,6 +18,9 @@ func main() {
 	// 3. 啟動 router，注入 db
     // 建立 Gin Router
     r := internal.SetupRouter(db)
+    
+
+    
 
     r.GET("/", func(c *gin.Context) {
         c.JSON(200, gin.H{

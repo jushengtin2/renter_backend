@@ -1,7 +1,9 @@
 package services
 
 import (
+	"fmt"
 	"renter_backend/internal/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -17,7 +19,7 @@ func NewPostService(db *gorm.DB) *PostService {
 }
 
 // GetPostForMainPage 取熱門文章
-func (s *PostService) GetPostForMainPage(post_filter string) ([]models.Post, error) {
+func (ps *PostService) GetPostForMainPage(post_filter string) ([]models.Post, error) {
 	var posts []models.Post
 
 	// 預設排序：最新
@@ -32,18 +34,54 @@ func (s *PostService) GetPostForMainPage(post_filter string) ([]models.Post, err
 		orderBy = "created_at DESC"
 	}
     //*****  Go 有一個特性：if 可以同時宣告變數 + 判斷條件。  *****//
-	if err := s.db.Order(orderBy).Limit(10).Find(&posts).Error; err != nil {
+	if err := ps.db.Order(orderBy).Limit(10).Find(&posts).Error; err != nil {
 		return nil, err
 	}
 	return posts, nil
 }
 
 // GetPostByID 取單一文章
-func (s *PostService) GetPostByID(postID string) (*models.Post, error) {
+func (ps *PostService) GetPostByID(postID string) (*models.Post, error) {
 	var post models.Post
-	if err := s.db.First(&post, "post_id = ?", postID).Error; err != nil {
+	if err := ps.db.First(&post, "post_id = ?", postID).Error; err != nil {
 		return nil, err
 	}
+	fmt.Println(&post)
 	return &post, nil
 }
+
+func (s *PostService) CreatePost(
+    userID string,
+    title string,
+    picture string,
+    location string,
+    // coordinate string,
+    //time不用傳我在service層直接寫time.now()
+    content string,
+    tags []string,
+) (*models.Post, error) {
+    post := models.Post{
+        UserID:      userID,
+        Title:       title,
+        PictureURL:  picture,
+        Location:    location,
+        CreatedAt:    time.Now(),
+        Content:     content,
+        // Tags:        strings,  要寫在另外一個table (tags<->posts)
+    }
+
+    if err := s.db.Create(&post).Error; err != nil {
+        return nil, err
+    }
+    return &post, nil
+}
+
+
+func (s *PostService) DeletePost(postID int) error {
+	if err := s.db.Delete(&models.Post{}, "post_id = ?", postID).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 

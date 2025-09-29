@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"renter_backend/internal/services"
 
@@ -10,6 +11,7 @@ import (
 type PostController struct {
 	// 這邊可以放很多指標物件 例如下面這個
     post_service *services.PostService //自己命名的post_service 然後用指標指向Service層已經創好的東西就不用每次請求都重新new東西， 意思是PostController依賴PostService，它不自己處理商業邏輯，而是交給 Service。
+	// 就像是我的Controller在創立的時候，裡面已經包了一個service，讓我在下面宣告func的時候可以func (pc *PostController) 
 }
 
 func NewPostController(s *services.PostService) *PostController { //*PostController是回傳型別
@@ -44,4 +46,63 @@ func (pc *PostController) GetPostByID (c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, posts) 
+}
+
+//發文需要驗證jwt
+func (pc *PostController) CreatePost(c *gin.Context) {
+    userID := c.GetString("clerk_user_id") // 從 context 取得 user id
+    if userID == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+        return
+    }
+    fmt.Println("userID from token:", userID)
+    
+	type PostRequest struct {
+    PostTitle     string   `json:"post_title" binding:"required"`
+    PostPicture   string   `json:"post_picture"`
+    PostLocation  string   `json:"post_location" binding:"required"`
+    PostContent   string   `json:"post_content" binding:"required"`
+    PostTag       []string `json:"post_tag"`
+	}
+
+    var para PostRequest
+    if err := c.ShouldBindJSON(&para); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    // 呼叫 Service 建立文章
+    if _, err := pc.post_service.CreatePost(
+        userID,
+        para.PostTitle,
+        para.PostPicture,
+        para.PostLocation,
+        para.PostContent,
+        para.PostTag,
+    ); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusCreated, gin.H{"message": "post created successfully"})
+}
+
+func(pc *PostController) DeletePost(c *gin.Context) {
+    type DeletePostRequest struct {
+        PostID int `json:"post_id" binding:"required"`
+    }
+    var para DeletePostRequest
+    if err := c.ShouldBindJSON(&para); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    fmt.Println("postID:", para.PostID)
+
+    if err := pc.post_service.DeletePost(para.PostID); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"message": "post deleted successfully"})
+
+
 }

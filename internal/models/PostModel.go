@@ -6,7 +6,7 @@ import (
 
 type Post struct {
 	PostID     int       `gorm:"primaryKey;autoIncrement" json:"post_id"`
-	UserID     string    `gorm:"type:uuid;not null" json:"user_id"`
+	UserID     string    `gorm:"type:text;not null" json:"user_id"`
 	Title      string    `gorm:"type:varchar(200);not null" json:"title"`
 	Content    string    `gorm:"type:text;not null" json:"content"`
 	PictureURL string    `gorm:"type:text" json:"picture_url"`
