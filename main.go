@@ -11,13 +11,14 @@ import (
 func main() {
     // 1. 連線資料庫
 	db := database.Connect()
+    rdb := database.ConnectRedis()
 
 	// 2. 自動建立資料表
 	database.AutoMigrate()
 
 	// 3. 啟動 router，注入 db
     // 建立 Gin Router
-    r := internal.SetupRouter(db)
+    r := internal.SetupRouter(db, rdb)
     
 
     

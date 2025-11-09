@@ -6,13 +6,8 @@ import (
 	"renter_backend/internal/services"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
 )
-
-type PostController struct {
-	// 這邊可以放很多指標物件 例如下面這個
-    post_service *services.PostService //自己命名的post_service 然後用指標指向Service層已經創好的東西就不用每次請求都重新new東西， 意思是PostController依賴PostService，它不自己處理商業邏輯，而是交給 Service。
-	// 就像是我的Controller在創立的時候，裡面已經包了一個service，讓我在下面宣告func的時候可以func (pc *PostController) 
-}
 
 func NewPostController(s *services.PostService) *PostController { //*PostController是回傳型別
 	// 依賴注入(Dependency Injection)模式，先有service再用controller去對到他，所以保證Controller建立時，一定有Service注入。
@@ -21,6 +16,11 @@ func NewPostController(s *services.PostService) *PostController { //*PostControl
     return &PostController{post_service: s}
 }
 
+type PostController struct {
+	// 這邊可以放很多指標物件 例如下面這個
+    post_service *services.PostService //自己命名的post_service 然後用指標指向Service層已經創好的東西就不用每次請求都重新new東西， 意思是PostController依賴PostService，它不自己處理商業邏輯，而是交給 Service。
+	// 就像是我的Controller在創立的時候，裡面已經包了一個service，讓我在下面宣告func的時候可以func (pc *PostController) 
+}
 //(pc * PostController) 代表 這個方法是綁定在 *PostController 這個 struct 上的 (指標操作！！)
 //當你呼叫 controller.GetPostForMainPage(c) 時，Go 編譯器會自動把 controller 傳進去，對應到這裡的 pc
 //Go 的 pc 就等於 Java 的 this、Python 的 self。只是 Go 沒有固定名字，你可以自己取名
@@ -38,14 +38,14 @@ func (pc *PostController) GetPostForMainPage (c *gin.Context) { //*gin.Context =
 	c.JSON(http.StatusOK, posts) // c.JSON代表回傳json格式
 }
 
-func (pc *PostController) GetPostByID (c *gin.Context) { 
+func (pc *PostController) GetPostByID(c *gin.Context) { 
 	postID := c.Param("postid")
-	posts, err := pc.post_service.GetPostByID(postID)
+	res, err := pc.post_service.GetPostByID(postID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, posts) 
+	c.JSON(http.StatusOK, res) 
 }
 
 //發文需要驗證jwt
@@ -59,7 +59,7 @@ func (pc *PostController) CreatePost(c *gin.Context) {
     
 	type PostRequest struct {
     PostTitle     string   `json:"post_title" binding:"required"`
-    PostPicture   string   `json:"post_picture"`
+    PostPicture   datatypes.JSON   `jsonb:"post_picture"`
     PostLocation  string   `json:"post_location" binding:"required"`
     PostContent   string   `json:"post_content" binding:"required"`
     PostTag       []string `json:"post_tag"`
