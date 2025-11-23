@@ -28,9 +28,16 @@ type PostController struct {
 //彈性：接收者可以是「值型別」( PostController ) 或「指標型別」( *PostController )。
 //用值 → 方法操作的是副本。
 //用指標 → 方法操作的是原本的 struct（常用）。
-func (pc *PostController) GetPostForMainPage (c *gin.Context) { //*gin.Context = 一次 HTTP 請求的上下文物件。所以只有controller知道context
+
+func (pc *PostController) GetPostForMainPage(c *gin.Context) { //*gin.Context = 一次 HTTP 請求的上下文物件。所以只有controller知道context
 	post_filter := c.Query("filter") // 取得查詢參數 filter
-	posts, err := pc.post_service.GetPostForMainPage(post_filter)
+    userID, _ := c.Get("clerk_user_id") 
+    userIDStr, ok := userID.(string)
+	if !ok {
+		// if the user id is missing or not a string, use empty string (or handle as needed)
+		userIDStr = ""
+	}
+	posts, err := pc.post_service.GetPostForMainPage(post_filter, userIDStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -38,9 +45,20 @@ func (pc *PostController) GetPostForMainPage (c *gin.Context) { //*gin.Context =
 	c.JSON(http.StatusOK, posts) // c.JSON代表回傳json格式
 }
 
+
 func (pc *PostController) GetPostByID(c *gin.Context) { 
 	postID := c.Param("postid")
-	res, err := pc.post_service.GetPostByID(postID)
+    userID, _ := c.Get("clerk_user_id") 
+	
+	userIDStr, ok := userID.(string)
+	if !ok {
+		// if the user id is missing or not a string, use empty string (or handle as needed)
+		userIDStr = ""
+	}
+	
+   
+	
+	res, err := pc.post_service.GetPostByID(postID, userIDStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -72,17 +90,17 @@ func (pc *PostController) CreatePost(c *gin.Context) {
     }
 
     // 呼叫 Service 建立文章
-    if _, err := pc.post_service.CreatePost(
-        userID,
-        para.PostTitle,
-        para.PostPicture,
-        para.PostLocation,
-        para.PostContent,
-        para.PostTag,
-    ); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+    // if _, err := pc.post_service.CreatePost(
+    //     userID,
+    //     para.PostTitle,
+    //     para.PostPicture,
+    //     para.PostLocation,
+    //     para.PostContent,
+    //     para.PostTag,
+    // ); err != nil {
+    //     c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+    //     return
+    // }
 
     c.JSON(http.StatusCreated, gin.H{"message": "post created successfully"})
 }
@@ -98,10 +116,10 @@ func(pc *PostController) DeletePost(c *gin.Context) {
     }
     fmt.Println("postID:", para.PostID)
 
-    if err := pc.post_service.DeletePost(para.PostID); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
+    // if err := pc.post_service.DeletePost(para.PostID); err != nil {
+    //     c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+    //     return
+    // }
     c.JSON(http.StatusOK, gin.H{"message": "post deleted successfully"})
 
 

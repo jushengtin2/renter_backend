@@ -100,7 +100,7 @@ func (cs *CommentService) GetCommentsByPostID(postID string, userID string) ([]*
 	}
 
 	if len(roots) > 0 {
-		fmt.Println("Response sample:", *roots[0])
+		//fmt.Println("Response sample:", *roots[0])
 	}
 	return roots, nil
 }
