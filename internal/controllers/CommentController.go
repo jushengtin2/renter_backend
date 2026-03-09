@@ -75,7 +75,7 @@ func (cc *CommentController) CreateComment(c *gin.Context) {
 	}
 
 	pic_files := form.File["picture_url"]
-	if pic_files == nil || comment_content == ""{
+	if pic_files == nil && comment_content == ""{
 		c.JSON(http.StatusBadRequest, gin.H{"error": "no data"})
 		return
 	}

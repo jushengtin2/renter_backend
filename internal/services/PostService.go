@@ -1,12 +1,14 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"renter_backend/internal/models"
@@ -403,7 +405,7 @@ func (s *PostService) CreatePost(
 	tags datatypes.JSON,
 	files []*multipart.FileHeader,
 ) (*models.Post, error) {
-	pictureURLs, err := s.uploadPostPicturesToGCS(context.Background(), userID, files)
+	pictureURLs, err := s.uploadPostPicturesToSupabase(context.Background(), userID, files)
 	if err != nil {
 		return nil, err
 	}
@@ -483,21 +485,33 @@ func isAllowedCityDistrict(city string, district string) bool {
 	return exists
 }
 
-func (s *PostService) uploadPostPicturesToGCS(ctx context.Context, userID string, files []*multipart.FileHeader) ([]string, error) {
+func (s *PostService) uploadPostPicturesToSupabase(ctx context.Context, userID string, files []*multipart.FileHeader) ([]string, error) {
 	if len(files) == 0 {
 		return []string{}, nil
 	}
-	if s.gcsClient == nil {
-		return nil, fmt.Errorf("gcs client is not initialized")
+
+	supabaseURL := strings.TrimRight(strings.TrimSpace(os.Getenv("SUPABASE_URL")), "/")
+	if supabaseURL == "" {
+		return nil, fmt.Errorf("SUPABASE_URL is not configured")
 	}
 
-	bucketName := os.Getenv("BUCKET_NAME")
+	supabaseKey := strings.TrimSpace(os.Getenv("SUPABASE_SERVICE_ROLE_KEY"))
+	if supabaseKey == "" {
+		// fallback：沿用你目前 workflow 使用的 key 名稱
+		supabaseKey = strings.TrimSpace(os.Getenv("SUPABASE_KEY"))
+	}
+	if supabaseKey == "" {
+		return nil, fmt.Errorf("SUPABASE_SERVICE_ROLE_KEY/SUPABASE_KEY is not configured")
+	}
+
+	bucketName := strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_BUCKET"))
 	if bucketName == "" {
-		return nil, fmt.Errorf("BUCKET_NAME is not configured")
+		return nil, fmt.Errorf("SUPABASE_STORAGE_BUCKET is not configured")
 	}
 
 	userSegment := sanitizePathSegment(userID)
 	pictureURLs := make([]string, 0, len(files))
+	httpClient := &http.Client{Timeout: 30 * time.Second}
 
 	for _, file := range files {
 		ext := filepath.Ext(file.Filename)
@@ -507,27 +521,37 @@ func (s *PostService) uploadPostPicturesToGCS(ctx context.Context, userID string
 		if err != nil {
 			return nil, fmt.Errorf("failed to open upload file: %w", err)
 		}
-
-		writer := s.gcsClient.Bucket(bucketName).Object(objectName).NewWriter(ctx)
-		if contentType := file.Header.Get("Content-Type"); contentType != "" {
-			writer.ContentType = contentType
+		contentBytes, err := io.ReadAll(src)
+		_ = src.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read upload file: %w", err)
 		}
 
-		if _, err := io.Copy(writer, src); err != nil {
-			_ = src.Close()
-			_ = writer.Close()
-			return nil, fmt.Errorf("failed to upload image to GCS: %w", err)
+		uploadURL := fmt.Sprintf("%s/storage/v1/object/%s/%s", supabaseURL, bucketName, objectName)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, uploadURL, bytes.NewReader(contentBytes))
+		if err != nil {
+			return nil, fmt.Errorf("failed to build supabase upload request: %w", err)
+		}
+		contentType := file.Header.Get("Content-Type")
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+		req.Header.Set("Authorization", "Bearer "+supabaseKey)
+		req.Header.Set("apikey", supabaseKey)
+		req.Header.Set("Content-Type", contentType)
+		req.Header.Set("x-upsert", "true")
+
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload image to supabase storage: %w", err)
+		}
+		respBody, _ := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return nil, fmt.Errorf("supabase upload failed (%d): %s", resp.StatusCode, strings.TrimSpace(string(respBody)))
 		}
 
-		if err := src.Close(); err != nil {
-			_ = writer.Close()
-			return nil, fmt.Errorf("failed to close upload file: %w", err)
-		}
-		if err := writer.Close(); err != nil {
-			return nil, fmt.Errorf("failed to finalize GCS upload: %w", err)
-		}
-
-		pictureURLs = append(pictureURLs, fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, objectName))
+		pictureURLs = append(pictureURLs, fmt.Sprintf("%s/storage/v1/object/public/%s/%s", supabaseURL, bucketName, objectName))
 	}
 
 	return pictureURLs, nil
