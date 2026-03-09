@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -24,7 +23,7 @@ import (
 // 只是定義 PostService 是包了一個db的結構 負責文章的商業邏輯
 type PostService struct {
 	db        *gorm.DB
-	rdb       *redis.Client
+	//rdb       *redis.Client
 	gcsClient *storage.Client
 }
 
@@ -51,8 +50,8 @@ func buildDistrictSet(districts ...string) map[string]struct{} {
 }
 
 // NewPostService 用來建立 PostService 接收 DB 連線
-func NewPostService(db *gorm.DB, rdb *redis.Client, gcsClient *storage.Client) *PostService {
-	return &PostService{db: db, rdb: rdb, gcsClient: gcsClient}
+func NewPostService(db *gorm.DB, gcsClient *storage.Client) *PostService {
+	return &PostService{db: db,  gcsClient: gcsClient}
 }
 
 type MainPagePostResponse struct {

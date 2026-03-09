@@ -11,7 +11,6 @@ import (
 	"renter_backend/internal/models"
 
 	"cloud.google.com/go/storage"
-	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -19,12 +18,12 @@ import (
 
 type CommentService struct {
 	db *gorm.DB
-	rdb *redis.Client
+	//rdb *redis.Client
 	gcsClient *storage.Client
 }
 
-func NewCommentService(db *gorm.DB, rdb *redis.Client, gcsClient *storage.Client) *CommentService {
-	return &CommentService{db: db, rdb: rdb, gcsClient: gcsClient}
+func NewCommentService(db *gorm.DB, gcsClient *storage.Client) *CommentService {
+	return &CommentService{db: db, gcsClient: gcsClient}
 }
 
 type CommentResponse struct {

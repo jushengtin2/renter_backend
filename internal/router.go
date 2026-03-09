@@ -9,11 +9,10 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
-func SetupRouter(db *gorm.DB, rdb *redis.Client, gcsClient *storage.Client) *gin.Engine {
+func SetupRouter(db *gorm.DB, gcsClient *storage.Client) *gin.Engine {
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
 		AllowAllOrigins:  true, // 全部允許
@@ -25,12 +24,12 @@ func SetupRouter(db *gorm.DB, rdb *redis.Client, gcsClient *storage.Client) *gin
 	}))
 
 	// 建立 Service
-	postService := services.NewPostService(db, rdb, gcsClient)
+	postService := services.NewPostService(db, gcsClient)
 
 	// 建立 Controller，注入 Service
 	postController := controllers.NewPostController(postService)
 
-	commentService := services.NewCommentService(db, rdb, gcsClient)
+	commentService := services.NewCommentService(db, gcsClient)
 	commentController := controllers.NewCommentController(commentService)
 
 	userService := services.NewUserService(db)

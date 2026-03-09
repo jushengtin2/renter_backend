@@ -16,14 +16,14 @@ func main() {
 
     // 1. 連線資料庫
 	db, supabaseClient, _ := database.Connect()
-    rdb := database.ConnectRedis()
+    //rdb := database.ConnectRedis()
 
 	// 2. 自動建立資料表
 	database.AutoMigrate()
 
 	// 3. 啟動 router，注入 db
     // 建立 Gin Router
-    r := internal.SetupRouter(db, rdb, supabaseClient)
+    r := internal.SetupRouter(db, supabaseClient)
     
     r.GET("/", func(c *gin.Context) {
         c.JSON(200, gin.H{
