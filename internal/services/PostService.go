@@ -490,9 +490,9 @@ func (s *PostService) uploadPostPicturesToSupabase(ctx context.Context, userID s
 		return []string{}, nil
 	}
 
-	supabaseURL := strings.TrimRight(strings.TrimSpace(os.Getenv("SUPABASE_URL")), "/")
+	supabaseURL := strings.TrimRight(strings.TrimSpace(os.Getenv("SUPABASE_DB_URL")), "/")
 	if supabaseURL == "" {
-		return nil, fmt.Errorf("SUPABASE_URL is not configured")
+		return nil, fmt.Errorf("SUPABASE_DB_URL is not configured")
 	}
 
 	supabaseKey := strings.TrimSpace(os.Getenv("SUPABASE_SERVICE_ROLE_KEY"))
@@ -504,9 +504,9 @@ func (s *PostService) uploadPostPicturesToSupabase(ctx context.Context, userID s
 		return nil, fmt.Errorf("SUPABASE_SERVICE_ROLE_KEY/SUPABASE_KEY is not configured")
 	}
 
-	bucketName := strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_BUCKET"))
+	bucketName := strings.TrimSpace(os.Getenv("BUCKET_NAME"))
 	if bucketName == "" {
-		return nil, fmt.Errorf("SUPABASE_STORAGE_BUCKET is not configured")
+		return nil, fmt.Errorf("BUCKET_NAME is not configured")
 	}
 
 	userSegment := sanitizePathSegment(userID)
@@ -556,6 +556,55 @@ func (s *PostService) uploadPostPicturesToSupabase(ctx context.Context, userID s
 
 	return pictureURLs, nil
 }
+
+// func (s *PostService) uploadPostPicturesToGCS(ctx context.Context, userID string, files []*multipart.FileHeader) ([]string, error) {
+// 	if len(files) == 0 {
+// 		return []string{}, nil
+// 	}
+// 	if s.gcsClient == nil {
+// 		return nil, fmt.Errorf("gcs client is not initialized")
+// 	}
+
+// 	bucketName := os.Getenv("BUCKET_NAME")
+// 	if bucketName == "" {
+// 		return nil, fmt.Errorf("BUCKET_NAME is not configured")
+// 	}
+
+// 	userSegment := sanitizePathSegment(userID)
+// 	pictureURLs := make([]string, 0, len(files))
+
+// 	for _, file := range files {
+// 		ext := filepath.Ext(file.Filename)
+// 		objectName := fmt.Sprintf("posts/%s/%s%s", userSegment, uuid.NewString(), ext)
+
+// 		src, err := file.Open()
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed to open upload file: %w", err)
+// 		}
+
+// 		writer := s.gcsClient.Bucket(bucketName).Object(objectName).NewWriter(ctx)
+// 		if contentType := file.Header.Get("Content-Type"); contentType != "" {
+// 			writer.ContentType = contentType
+// 		}
+
+// 		if _, err := io.Copy(writer, src); err != nil {
+// 			_ = src.Close()
+// 			_ = writer.Close()
+// 			return nil, fmt.Errorf("failed to upload image to GCS: %w", err)
+// 		}
+
+// 		if err := src.Close(); err != nil {
+// 			_ = writer.Close()
+// 			return nil, fmt.Errorf("failed to close upload file: %w", err)
+// 		}
+// 		if err := writer.Close(); err != nil {
+// 			return nil, fmt.Errorf("failed to finalize GCS upload: %w", err)
+// 		}
+
+// 		pictureURLs = append(pictureURLs, fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, objectName))
+// 	}
+
+// 	return pictureURLs, nil
 
 func sanitizePathSegment(input string) string {
 	if input == "" {
