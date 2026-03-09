@@ -491,9 +491,9 @@ func (s *PostService) uploadPostPicturesToGCS(ctx context.Context, userID string
 		return nil, fmt.Errorf("gcs client is not initialized")
 	}
 
-	bucketName := os.Getenv("GCS_BUCKET_NAME")
+	bucketName := os.Getenv("BUCKET_NAME")
 	if bucketName == "" {
-		return nil, fmt.Errorf("GCS_BUCKET_NAME is not configured")
+		return nil, fmt.Errorf("BUCKET_NAME is not configured")
 	}
 
 	userSegment := sanitizePathSegment(userID)
