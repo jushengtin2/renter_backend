@@ -4,20 +4,25 @@ import (
 	"time"
 
 	"gorm.io/datatypes"
+	"gorm.io/gorm" // 記得引入這個
 )
 
-type Post struct { //他會自動改成snake_case然後給你加s 所以對照到了我sql的table name
-	PostID     int       `gorm:"primaryKey;autoIncrement" json:"post_id"`
-	UserID     string    `gorm:"type:text;not null" json:"user_id"`
-	Title      string    `gorm:"type:varchar(200);not null" json:"title"`
-	Content    string    `gorm:"type:text;not null" json:"content"`
-	PictureURL datatypes.JSON `gorm:"type:jsonb" json:"picture_url"`
-	Location   string    `gorm:"type:varchar(100)" json:"location"`
-	CreatedAt  time.Time `gorm:"autoCreateTime" json:"created_at"`
-	LikeNumber int       `gorm:"default:0" json:"like_number"`
-	SaveNumber int       `gorm:"default:0" json:"save_number"`
-	Status     bool      `gorm:"default:true" json:"status"`
-	
+type Post struct {
+    PostID     int            `gorm:"primaryKey;autoIncrement" json:"post_id"`
+    UserID     string         `gorm:"type:text;not null;index" json:"user_id"` // 建議加 index 提升查詢效率
+    Title      string         `gorm:"type:varchar(200);not null" json:"title"`
+    Content    string         `gorm:"type:text;not null" json:"content"`
+    Picture    datatypes.JSON `gorm:"type:jsonb" json:"picture"`
+    Address    string         `gorm:"type:varchar(100)" json:"address"`
+    City       string         `gorm:"type:varchar(50)" json:"city"`
+    District   string         `gorm:"type:varchar(50)" json:"district"`
+    Latitude   float64        `gorm:"type:decimal(10,6)" json:"latitude"`
+    Longitude  float64        `gorm:"type:decimal(10,6)" json:"longitude"`
+    Location   []byte         `gorm:"type:geography(Point,4326)" json:"location,omitempty"`
+    CreatedAt  time.Time      `json:"created_at"`
+    UpdatedAt  time.Time      `json:"updated_at"` // 建議增加更新時間
+    DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"` // 軟刪除核心：這行讓查詢自動排除已刪除貼文
+    LikeNumber int            `gorm:"default:0" json:"like_number"`
+    SaveNumber int            `gorm:"default:0" json:"save_number"`
+    Tags       datatypes.JSON `gorm:"type:jsonb" json:"tags"`
 }
-
-

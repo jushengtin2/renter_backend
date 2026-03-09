@@ -1,7 +1,8 @@
 services:
   db:
-    image: postgres:15
+    build: . # 使用當前目錄的 Dockerfile 建立
     container_name: renter_db
+    # image: ... (刪除原本的 image 這一行)
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: 12345678
@@ -41,3 +42,14 @@ services:
       - "8788:5540"
     depends_on:
       - redis
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    environment:
+      - NGROK_AUTHTOKEN=3AOC7EejyuE8Igmzj2ObBpeoqIH_Av1zJvHywJHzKXn9P2H3
+    ports:
+      - "4040:4040"
+    command:
+      - "http"
+      - "host.docker.internal:8080" # 關鍵：指向你電腦終端機跑的 8080
+    # 這裡不需要 depends_on: server，因為 server 沒跑在 Docker 裡

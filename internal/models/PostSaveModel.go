@@ -5,8 +5,8 @@ import (
 )
 type PostSave struct {
 
-	UserID        string `gorm:"primaryKey type:text;not null" json:"user_id"`
-	PostID int    `gorm:"primaryKey type:int;not null" json:"post_id"`
-	CreatedAt	time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UserID      string 		`gorm:"primaryKey type:text;not null" json:"user_id"`
+	PostID		int    		`gorm:"primaryKey type:int;not null" json:"post_id"`
+	CreatedAt	time.Time 	`json:"created_at"`
 
 }

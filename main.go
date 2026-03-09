@@ -6,11 +6,16 @@ import (
 	"renter_backend/internal/database"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+    //0. 載入 .env
+    _ = godotenv.Load()
+
     // 1. 連線資料庫
-	db := database.Connect()
+	db, supabaseClient, _ := database.Connect()
     rdb := database.ConnectRedis()
 
 	// 2. 自動建立資料表
@@ -18,11 +23,8 @@ func main() {
 
 	// 3. 啟動 router，注入 db
     // 建立 Gin Router
-    r := internal.SetupRouter(db, rdb)
+    r := internal.SetupRouter(db, rdb, supabaseClient)
     
-
-    
-
     r.GET("/", func(c *gin.Context) {
         c.JSON(200, gin.H{
             "message": "BACKEND IS RUNNING",

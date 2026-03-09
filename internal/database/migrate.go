@@ -6,7 +6,15 @@ import (
 )
 
 func AutoMigrate() {
-	if err := DB.AutoMigrate(&models.Post{}); err != nil {
+	if err := DB.AutoMigrate(
+		&models.User{},
+		&models.Post{},
+
+		&models.Comment{},
+		
+
+
+	); err != nil {
 		log.Fatalf("migration failed: %v", err)
 	}
 }

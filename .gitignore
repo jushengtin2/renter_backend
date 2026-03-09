@@ -1,1 +1,11 @@
+# 本地數據庫與工具數據
+pgadmin_data/
+postgres_data/
+
+# 環境變數與機密
 .env
+*.pem
+
+# Go 編譯與快取
+.gocache/
+bin/
