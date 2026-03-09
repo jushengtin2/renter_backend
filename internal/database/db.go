@@ -57,7 +57,10 @@ func Connect() (*gorm.DB, *storage.Client, error) {
 	// 雲端模式：不使用 GCS，只使用 Supabase（DB）
 	if isCloud {
 		Storage_Client = nil
-		BucketName = os.Getenv("BUCKET_NAME") 
+		BucketName = strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_BUCKET"))
+		if BucketName == "" {
+			BucketName = strings.TrimSpace(os.Getenv("BUCKET_NAME"))
+		}
 		log.Println("雲端模式：跳過 GCS 初始化，僅使用 Supabase")
 		return DB, nil, nil
 	}
@@ -73,9 +76,12 @@ func Connect() (*gorm.DB, *storage.Client, error) {
 	Storage_Client = gcsClient
 
 	// 取得 Bucket 名稱
-	BucketName = os.Getenv("BUCKET_NAME") 
+	BucketName = strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_BUCKET"))
 	if BucketName == "" {
-		log.Println("警告: BUCKET_NAME 環境變數未設定")
+		BucketName = strings.TrimSpace(os.Getenv("BUCKET_NAME"))
+	}
+	if BucketName == "" {
+		log.Println("警告: SUPABASE_STORAGE_BUCKET/BUCKET_NAME 環境變數未設定")
 	} else {
 		log.Printf("BUCKET Client 初始化成功 (Bucket: %s)\n", BucketName)
 	}

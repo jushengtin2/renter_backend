@@ -490,10 +490,16 @@ func (s *PostService) uploadPostPicturesToSupabase(ctx context.Context, userID s
 		return []string{}, nil
 	}
 
-	supabaseURL := strings.TrimRight(strings.TrimSpace(os.Getenv("SUPABASE_DB_URL")), "/")
-	if supabaseURL == "" {
-		return nil, fmt.Errorf("SUPABASE_DB_URL is not configured")
+	storageURL := strings.TrimRight(strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_URL")), "/")
+	if storageURL == "" {
+		storageURL = strings.TrimRight(strings.TrimSpace(os.Getenv("SUPABASE_URL")), "/")
 	}
+	if storageURL == "" {
+		return nil, fmt.Errorf("SUPABASE_STORAGE_URL/SUPABASE_URL is not configured")
+	}
+	baseURL := strings.TrimSuffix(storageURL, "/storage/v1/s3")
+	baseURL = strings.TrimSuffix(baseURL, "/storage/v1")
+	baseURL = strings.TrimRight(baseURL, "/")
 
 	supabaseKey := strings.TrimSpace(os.Getenv("SUPABASE_SERVICE_ROLE_KEY"))
 	if supabaseKey == "" {
@@ -501,12 +507,19 @@ func (s *PostService) uploadPostPicturesToSupabase(ctx context.Context, userID s
 		supabaseKey = strings.TrimSpace(os.Getenv("SUPABASE_KEY"))
 	}
 	if supabaseKey == "" {
-		return nil, fmt.Errorf("SUPABASE_SERVICE_ROLE_KEY/SUPABASE_KEY is not configured")
+		// 你目前提供的是 S3 Access Key，若不是 JWT 可能無法走 REST API
+		supabaseKey = strings.TrimSpace(os.Getenv("SUPABASE_ACCESS_KEY"))
+	}
+	if supabaseKey == "" {
+		return nil, fmt.Errorf("SUPABASE_SERVICE_ROLE_KEY/SUPABASE_KEY/SUPABASE_ACCESS_KEY is not configured")
 	}
 
-	bucketName := strings.TrimSpace(os.Getenv("BUCKET_NAME"))
+	bucketName := strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_BUCKET"))
 	if bucketName == "" {
-		return nil, fmt.Errorf("BUCKET_NAME is not configured")
+		bucketName = strings.TrimSpace(os.Getenv("BUCKET_NAME"))
+	}
+	if bucketName == "" {
+		return nil, fmt.Errorf("SUPABASE_STORAGE_BUCKET/BUCKET_NAME is not configured")
 	}
 
 	userSegment := sanitizePathSegment(userID)
@@ -527,7 +540,7 @@ func (s *PostService) uploadPostPicturesToSupabase(ctx context.Context, userID s
 			return nil, fmt.Errorf("failed to read upload file: %w", err)
 		}
 
-		uploadURL := fmt.Sprintf("%s/storage/v1/object/%s/%s", supabaseURL, bucketName, objectName)
+		uploadURL := fmt.Sprintf("%s/storage/v1/object/%s/%s", baseURL, bucketName, objectName)
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, uploadURL, bytes.NewReader(contentBytes))
 		if err != nil {
 			return nil, fmt.Errorf("failed to build supabase upload request: %w", err)
@@ -551,7 +564,7 @@ func (s *PostService) uploadPostPicturesToSupabase(ctx context.Context, userID s
 			return nil, fmt.Errorf("supabase upload failed (%d): %s", resp.StatusCode, strings.TrimSpace(string(respBody)))
 		}
 
-		pictureURLs = append(pictureURLs, fmt.Sprintf("%s/storage/v1/object/public/%s/%s", supabaseURL, bucketName, objectName))
+		pictureURLs = append(pictureURLs, fmt.Sprintf("%s/storage/v1/object/public/%s/%s", baseURL, bucketName, objectName))
 	}
 
 	return pictureURLs, nil
