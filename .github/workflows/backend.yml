@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: project-c0a608b0-a22f-495a-aa8
   SERVICE_NAME: hazukashii-backend
   REGION: asia-east1
   REPO_NAME: hazukashii-artifact-registry
@@ -57,6 +57,7 @@ jobs:
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
             --set-env-vars "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }},SUPABASE_KEY=${{ secrets.SUPABASE_KEY }},CLERK_JWKS_URL=${{ secrets.CLERK_JWKS_URL }},CLERK_PRIVATE_KEY=${{ secrets.CLERK_PRIVATE_KEY }}" \
             --platform managed \
             --allow-unauthenticated \
