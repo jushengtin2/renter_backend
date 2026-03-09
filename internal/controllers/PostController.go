@@ -152,6 +152,7 @@ func (pc *PostController) GetPostByID(c *gin.Context) {
 
 // 發文需要驗證jwt
 func (pc *PostController) CreatePost(c *gin.Context) {
+	fmt.Println("testtest")
 	userID := c.GetString("clerk_user_id") // 已經從middleware context 取得 user id
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})

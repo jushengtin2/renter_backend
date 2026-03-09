@@ -20,7 +20,7 @@ func isPublicWebhookPath(c *gin.Context) bool {
 
 	// 對齊 Clerk 文件: /api/webhooks(.*) 應設為 public
 	path := c.Request.URL.Path
-	return strings.HasPrefix(path, "/") || strings.HasPrefix(path, "/api/v1/webhooks")
+	return strings.HasPrefix(path, "/api/webhooks") || strings.HasPrefix(path, "/api/v1/webhooks")
 }
 
 func OptionalClerkAuth() gin.HandlerFunc {
