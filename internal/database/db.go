@@ -20,6 +20,8 @@ var (
 
 // Connect 初始化資料庫和 GCS 連線
 func Connect() (*gorm.DB, *storage.Client, error) {
+	log.Println("資料庫連線開始")
+
 	appEnv := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
 	isCloud := appEnv == "cloud" || appEnv == "production"
 	var dsn string
@@ -71,6 +73,7 @@ func Connect() (*gorm.DB, *storage.Client, error) {
 	// }
 
 	// 下面是storage (GCS) 初始化流程
+	log.Println("ＧＣＳ連線開始")
 	ctx := context.Background()
 	
 	gcsClient, err := storage.NewClient(ctx)
