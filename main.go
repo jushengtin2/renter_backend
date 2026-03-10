@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"renter_backend/internal"
 	"renter_backend/internal/database"
 
@@ -36,7 +37,10 @@ func main() {
     })
 
     // 啟動伺服器
-	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("server failed to start: %v", err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
+	r.Run(":" + port)
+	
 }

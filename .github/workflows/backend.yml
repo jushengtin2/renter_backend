@@ -1,9 +1,6 @@
 name: Deploy Backend to GCP Cloud Run
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     types: [closed]
     branches:
