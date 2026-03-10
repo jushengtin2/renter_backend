@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
+
 	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
@@ -156,19 +158,33 @@ func (ps *PostService) GetPostForMainPage(
 		query = query.Where("district = ?", area)
 	}
 
-	// 1.1 文字搜尋（使用 posts.search_vector）
+	// 1.1 文字搜尋 ！！！我是先看搜尋的字有沒有精準匹配到文章標題或內容 有的話一定排在前面 但如果沒有的話就用word_similarity
 	trimmedSearchText := strings.TrimSpace(searchText)
 	if trimmedSearchText != "" {
-		likePattern := "%" + trimmedSearchText + "%"
+		// 1. 準備字元陣列 (用於 One-hot 廣域過濾)
+		var charsPatterns []string
+		for _, r := range trimmedSearchText {
+			charsPatterns = append(charsPatterns, "%"+string(r)+"%")
+		}
+		// 2. Where 條件：
+		// - title ?| ? : 標題中只要包含搜尋詞中的「任何一個字」就抓出來 (利用 GIN 索引)
+		// - title ILIKE : 保留原始精準模糊比對作為加強
+		// 修改後的 Go 程式碼
 		query = query.Where(
-			"(search_vector @@ plainto_tsquery('chinese_zh', ?) OR title ILIKE ?)",
-			trimmedSearchText,
-			likePattern,
+			"(title ILIKE ANY (?) OR title ILIKE ? OR content ILIKE ?)",
+			pq.Array(charsPatterns), // 注意這裡要轉成 ["%台%", "%灣%", ...]
+			"%"+trimmedSearchText+"%",
+			"%"+trimmedSearchText+"%",
 		)
 
-		// 全文命中優先，其餘再依原本 sort 規則
+		// 3. 排序邏輯：
+		// 使用 word_similarity(搜尋詞, 標題)
+		// 搜尋「台灣大學」時：
+		// - 「台灣大學隔壁」的分數會接近 1.0
+		// - 「台大隔壁」的分數會很高 (因為台大是台灣大學的子集)
+		// - 「我有大學學歷」的分數會很低 (只中兩個字，且不連續)
 		query = query.Order(clause.Expr{
-			SQL:  "search_vector @@ plainto_tsquery('chinese_zh', ?) DESC",
+			SQL:  "word_similarity(?, title) DESC, id DESC", 
 			Vars: []interface{}{trimmedSearchText},
 		})
 	}
