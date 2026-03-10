@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"renter_backend/internal/models"
+	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
@@ -98,7 +99,7 @@ func (cs *CommentService) GetCommentsByPostID(postID string, userID string, orde
 			ProfilePicture:	  c.User.ProfilePicture,
 			CommentID:        c.CommentID,
 			CommentContent:   c.Content,
-			CommentTime:      c.CreatedAt.Format("2006-01-02 15:04:05"),
+			CommentTime:      c.CreatedAt.Format(time.RFC3339Nano),
 			CommentPicture:   pics,
 			CommentCount:     0,
 			CommentLikeNumber: c.LikeNumber,
@@ -144,6 +145,7 @@ func (cs *CommentService) CreateComment(postIDInt int, reply_comment_id string, 
 		ReplyPostID: &postIDInt,
 		Content:     content,
 		PictureURL:  datatypes.JSON(pictureJSON), //二進位再轉成文字版json（就是我們平常看到的）
+		CreatedAt:   time.Now().UTC(),
 	}
 	
 	if reply_comment_id != "" {
@@ -162,7 +164,7 @@ func (cs *CommentService) CreateComment(postIDInt int, reply_comment_id string, 
 		CommentID:      comment.CommentID,
 		CommentContent: comment.Content,
 		CommentPicture: pictureURLs,
-		CommentTime:    comment.CreatedAt.Format("2006-01-02 15:04:05"),
+		CommentTime: comment.CreatedAt.UTC().Format(time.RFC3339),
 		ILikeItOrNot:   false,
 		ReplyCommentID: comment.ReplyCommentID,
 

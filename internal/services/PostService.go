@@ -153,7 +153,9 @@ func (ps *PostService) GetPostForMainPage(
 	offset := (page - 1) * pageSize //因為我學airbnb所以不用cursor-based pagination 直接用offset就好 這樣前端要跳到第幾頁就直接算出offset傳給我就好
 
 	// 1. 處理地區篩選
+
 	area := strings.TrimSpace(selected_area)
+	print(area)
 	if area != "" && area != "all" {
 		query = query.Where("district = ?", area)
 	}
@@ -290,11 +292,11 @@ func (ps *PostService) GetPostForMainPage(
 		if len(p.Picture) > 0 {
 			json.Unmarshal(p.Picture, &pics)
 		}
-
+		println(p.CreatedAt.UTC().Format("2006-01-02 15:04:05"))
 		res = append(res, &MainPagePostResponse{
 			PostID:         p.PostID,
 			Title:          p.Title,
-			Timestamp:      p.CreatedAt.Format("2006-01-02 15:04:05"),
+			Timestamp:      p.CreatedAt.UTC().Format("2006-01-02 15:04:05"),
 			PictureURL:     pics,
 			Content:        p.Content,
 			LikeNumber:     p.LikeNumber,
@@ -394,7 +396,7 @@ func (ps *PostService) GetPostByID(postID string, userID string) (*PostResponse,
 		AuthorID:       author.UserID,
 		AuthorPic:      author.ProfilePicture,
 		Title:          post.Title,
-		Timestamp:      post.CreatedAt.Format("2006-01-02 15:04:05"), //!!如果用.string()會有包含時區 我目前先不管時區
+		Timestamp:      post.CreatedAt.Format(time.RFC3339Nano),
 		Content:        post.Content,
 		LikeNumber:     post.LikeNumber,
 		BookmarkNumber: post.SaveNumber,
@@ -443,7 +445,7 @@ func (s *PostService) CreatePost(
 		District:   district,
 		Latitude:   latitude,
 		Longitude:  longitude,
-		CreatedAt:  time.Now().Truncate(time.Second),
+		CreatedAt:  time.Now().UTC(),
 		Content:    content,
 		LikeNumber: 0,
 		SaveNumber: 0,
@@ -661,7 +663,7 @@ func (ps *PostService) GetSavePost(userID string, orderDir string) ([]SavePostPa
 		res = append(res, SavePostPageResponse{
 			PostID:     row.PostID,
 			Title:      row.Title,
-			Timestamp:  row.CreatedAt.Format("2006-01-02 15:04:05"),
+			Timestamp:  row.CreatedAt.UTC().Format("2006-01-02 15:04:05"),
 			PictureURL: pics,
 			Content:    row.Content,
 			City:       row.City,

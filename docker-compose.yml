@@ -1,6 +1,6 @@
 services:
   db:
-    build: . # 使用當前目錄的 Dockerfile 建立
+    image: postgis/postgis:15-3.3
     container_name: renter_db
     # image: ... (刪除原本的 image 這一行)
     environment:
