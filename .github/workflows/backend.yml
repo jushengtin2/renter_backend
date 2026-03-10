@@ -1,9 +1,6 @@
 name: Deploy Backend to GCP Cloud Run
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     types: [closed]
     branches:
@@ -58,7 +55,7 @@ jobs:
             --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
             --project ${{ env.PROJECT_ID }} \
-            --set-env-vars "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }},SUPABASE_KEY=${{ secrets.SUPABASE_KEY }},CLERK_JWKS_URL=${{ secrets.CLERK_JWKS_URL }},CLERK_PRIVATE_KEY=${{ secrets.CLERK_PRIVATE_KEY }},BUCKET_NAME=${{secrets.BUCKET_NAME}}" \
+            --set-env-vars "SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }},SUPABASE_KEY=${{ secrets.SUPABASE_KEY }},CLERK_JWKS_URL=${{ secrets.CLERK_JWKS_URL }},CLERK_PRIVATE_KEY=${{ secrets.CLERK_PRIVATE_KEY }},GCS_BUCKET_NAME=${{secrets.GCS_BUCKET_NAME}}" \
             --platform managed \
             --allow-unauthenticated \
             --quiet
