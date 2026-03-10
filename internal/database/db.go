@@ -22,15 +22,20 @@ var (
 func Connect() (*gorm.DB, *storage.Client, error) {
 	appEnv := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
 	isCloud := appEnv == "cloud" || appEnv == "production"
-
+	var dsn string
 	// === 1. 初始化資料庫連線 ===
 	// 雲端：強制使用 Supabase 連線字串
 	// 本地：優先吃 SUPABASE_DB_URL；若沒設，才 fallback 到 DB_* 設定
-	dsn := strings.TrimSpace(os.Getenv("SUPABASE_DB_URL"))
+	if isCloud{
+		dsn = strings.TrimSpace(os.Getenv("SUPABASE_DB_URL"))
+		println("prod mode")
+	}
+
 	if isCloud && dsn == "" {
 		return nil, nil, fmt.Errorf("APP_ENV=%s but SUPABASE_DB_URL is empty", appEnv)
 	}
 	if dsn == "" {
+		println("dev mode")
 		host := os.Getenv("DB_HOST")
 		port := os.Getenv("DB_PORT")
 		user := os.Getenv("DB_USER")
