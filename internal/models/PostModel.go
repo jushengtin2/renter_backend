@@ -19,7 +19,7 @@ type Post struct {
     Latitude   float64        `gorm:"type:decimal(10,6)" json:"latitude"`
     Longitude  float64        `gorm:"type:decimal(10,6)" json:"longitude"`
     Location   []byte         `gorm:"type:geography(Point,4326)" json:"location,omitempty"`
-    CreatedAt  time.Time      `json:"created_at"`
+    CreatedAt  time.Time      `gorm:"default:(-)" json:"created_at"`
     UpdatedAt  time.Time      `json:"updated_at"` // 建議增加更新時間
     DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"` // 軟刪除核心：這行讓查詢自動排除已刪除貼文
     LikeNumber int            `gorm:"default:0" json:"like_number"`
