@@ -54,18 +54,18 @@ func Connect() (*gorm.DB, *storage.Client, error) {
 	log.Println("資料庫連線成功")
 
 	// === 2. 初始化 GCS Client ===
-	// 雲端模式：不使用 GCS，只使用 Supabase（DB）
-	if isCloud {
-		Storage_Client = nil
-		BucketName = strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_BUCKET"))
-		if BucketName == "" {
-			BucketName = strings.TrimSpace(os.Getenv("BUCKET_NAME"))
-		}
-		log.Println("雲端模式：跳過 GCS 初始化，僅使用 Supabase")
-		return DB, nil, nil
-	}
+	// // 雲端模式：不使用 GCS，只使用 Supabase（DB）
+	// if isCloud {
+	// 	Storage_Client = nil
+	// 	BucketName = strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_BUCKET"))
+	// 	if BucketName == "" {
+	// 		BucketName = strings.TrimSpace(os.Getenv("BUCKET_NAME"))
+	// 	}
+	// 	log.Println("雲端模式：跳過 GCS 初始化，僅使用 Supabase")
+	// 	return DB, nil, nil
+	// }
 
-	// 本地模式：保留原本 GCS 初始化流程
+	// 下面是storage (GCS) 初始化流程
 	ctx := context.Background()
 	
 	gcsClient, err := storage.NewClient(ctx)
@@ -76,14 +76,11 @@ func Connect() (*gorm.DB, *storage.Client, error) {
 	Storage_Client = gcsClient
 
 	// 取得 Bucket 名稱
-	BucketName = strings.TrimSpace(os.Getenv("SUPABASE_STORAGE_BUCKET"))
+	BucketName = strings.TrimSpace(os.Getenv("GCS_BUCKET_NAME"))
 	if BucketName == "" {
-		BucketName = strings.TrimSpace(os.Getenv("BUCKET_NAME"))
-	}
-	if BucketName == "" {
-		log.Println("警告: SUPABASE_STORAGE_BUCKET/BUCKET_NAME 環境變數未設定")
+		log.Println("警告: GCS_BUCKET_NAME 環境變數未設定")
 	} else {
-		log.Printf("BUCKET Client 初始化成功 (Bucket: %s)\n", BucketName)
+		log.Printf("GCS BUCKET Client 初始化成功 (Bucket: %s)\n", BucketName)
 	}
 
 	return DB, Storage_Client, nil
