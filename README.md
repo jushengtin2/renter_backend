@@ -1,6 +1,19 @@
-# 租屋平台後端（Renter Backend）
-網址：https://renter-nine.vercel.app/
+<div align="center">
+  
+ # 哈住卡喜租住屋討論平台後端（hazukashii Backend）
+  
+---
+</div>
 
+<div align="center">
+
+*靈感來源是我想要建立一個公開透明的台灣租住屋討論平台，如果有好的房源可以互相討論也可以讓房東或賣家promote*
+
+*總而言之就是讓大家自由發言！ (目前為version1)*
+
+*網址：https://renter-nine.vercel.app/*
+---
+</div>
 以 Go + Gin + GORM 開發的租屋平台後端服務，提供貼文、留言、按讚/收藏、使用者同步（Clerk webhook）等功能，資料庫使用 PostgreSQL（可連本地 PostgreSQL 或 Supabase Postgres）。
 
 ## 專案定位
