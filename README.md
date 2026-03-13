@@ -1,4 +1,5 @@
 # 租屋平台後端（Renter Backend）
+網址：https://renter-nine.vercel.app/
 
 以 Go + Gin + GORM 開發的租屋平台後端服務，提供貼文、留言、按讚/收藏、使用者同步（Clerk webhook）等功能，資料庫使用 PostgreSQL（可連本地 PostgreSQL 或 Supabase Postgres）。
 
