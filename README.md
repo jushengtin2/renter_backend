@@ -112,4 +112,4 @@
 - DB：PostgreSQL / Supabase Postgres
 - Auth：Clerk（JWKS 驗證 JWT）
 - Storage：Google Cloud Storage
-- Deployment：Docker + Cloud Run + GitHub Actions
+- Deployment：Docker + Cloud Run + GitHub Actions +Terraform (IaC)
