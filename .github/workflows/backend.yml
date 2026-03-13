@@ -18,6 +18,7 @@ env:
 
 jobs:
   deploy:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -55,7 +56,7 @@ jobs:
             --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
             --project ${{ env.PROJECT_ID }} \
-            --set-env-vars "APP_ENV=${{secrets.APP_ENV}},SUPABASE_DB_URL=${{ secrets.SUPABASE_DB_URL }},SUPABASE_KEY=${{ secrets.SUPABASE_KEY }},CLERK_JWKS_URL=${{ secrets.CLERK_JWKS_URL }},CLERK_PRIVATE_KEY=${{ secrets.CLERK_PRIVATE_KEY }},GCS_BUCKET_NAME=${{secrets.GCS_BUCKET_NAME}}" \
+            --set-secrets "GCS_BUCKET_NAME=hazukashii_picture_storage:latest,SUPABASE_DB_URL=supabase-db-url:latest,SUPABASE_STORAGE_URL=supabase-storage-url:latest,SUPABASE_KEY_ID=supabase-key-id:latest,SUPABASE_ACCESS_KEY=supabase-access-key:latest,SUPABASE_REGION=supabase-region:latest,CLERK_JWKS_URL=clerk-jwks-url:latest,CLERK_PRIVATE_KEY=clerk-private-key:latest,CLERK_WEBHOOK_SIGNING_SECRET=clerk-webhook-signing-secret:latest,CLERK_WEBHOOK_PATH=clerk-webhook-path:latest" \
             --platform managed \
             --allow-unauthenticated \
             --quiet
