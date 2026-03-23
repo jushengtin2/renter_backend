@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-    //0. 載入 .env
+    //0 載入 .env
     _ = godotenv.Load()
 
 	// 1. 連線資料庫
@@ -32,7 +32,7 @@ func main() {
     
     r.GET("/", func(c *gin.Context) {
         c.JSON(200, gin.H{
-            "message": "!BACKEND IS RUNNING!",
+            "message": "BACKEND IS RUNNING!",
         })
     })
 
